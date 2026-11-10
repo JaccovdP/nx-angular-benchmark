@@ -1,0 +1,9 @@
+{
+  "name": "lib-010",
+  "projectType": "library",
+  "sourceRoot": "libs/lib-010/src",
+  "tags": [
+    "layer:1"
+  ],
+  "targets": {}
+}

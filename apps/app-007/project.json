@@ -1,0 +1,27 @@
+{
+  "name": "app-007",
+  "projectType": "application",
+  "sourceRoot": "apps/app-007/src",
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/apps/app-007",
+        "index": "apps/app-007/src/index.html",
+        "browser": "apps/app-007/src/main.ts",
+        "tsConfig": "apps/app-007/tsconfig.app.json",
+        "polyfills": [
+          "zone.js"
+        ],
+        "styles": [],
+        "assets": [],
+        "optimization": true,
+        "sourceMap": false,
+        "outputHashing": "all"
+      }
+    }
+  }
+}

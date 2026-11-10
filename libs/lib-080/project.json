@@ -1,0 +1,9 @@
+{
+  "name": "lib-080",
+  "projectType": "library",
+  "sourceRoot": "libs/lib-080/src",
+  "tags": [
+    "layer:8"
+  ],
+  "targets": {}
+}

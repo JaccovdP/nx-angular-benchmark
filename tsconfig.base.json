@@ -1,0 +1,323 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "target": "ES2022",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
+    "strict": true,
+    "skipLibCheck": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "esModuleInterop": true,
+    "paths": {
+      "@bench/lib-000": [
+        "libs/lib-000/src/index.ts"
+      ],
+      "@bench/lib-001": [
+        "libs/lib-001/src/index.ts"
+      ],
+      "@bench/lib-002": [
+        "libs/lib-002/src/index.ts"
+      ],
+      "@bench/lib-003": [
+        "libs/lib-003/src/index.ts"
+      ],
+      "@bench/lib-004": [
+        "libs/lib-004/src/index.ts"
+      ],
+      "@bench/lib-005": [
+        "libs/lib-005/src/index.ts"
+      ],
+      "@bench/lib-006": [
+        "libs/lib-006/src/index.ts"
+      ],
+      "@bench/lib-007": [
+        "libs/lib-007/src/index.ts"
+      ],
+      "@bench/lib-008": [
+        "libs/lib-008/src/index.ts"
+      ],
+      "@bench/lib-009": [
+        "libs/lib-009/src/index.ts"
+      ],
+      "@bench/lib-010": [
+        "libs/lib-010/src/index.ts"
+      ],
+      "@bench/lib-011": [
+        "libs/lib-011/src/index.ts"
+      ],
+      "@bench/lib-012": [
+        "libs/lib-012/src/index.ts"
+      ],
+      "@bench/lib-013": [
+        "libs/lib-013/src/index.ts"
+      ],
+      "@bench/lib-014": [
+        "libs/lib-014/src/index.ts"
+      ],
+      "@bench/lib-015": [
+        "libs/lib-015/src/index.ts"
+      ],
+      "@bench/lib-016": [
+        "libs/lib-016/src/index.ts"
+      ],
+      "@bench/lib-017": [
+        "libs/lib-017/src/index.ts"
+      ],
+      "@bench/lib-018": [
+        "libs/lib-018/src/index.ts"
+      ],
+      "@bench/lib-019": [
+        "libs/lib-019/src/index.ts"
+      ],
+      "@bench/lib-020": [
+        "libs/lib-020/src/index.ts"
+      ],
+      "@bench/lib-021": [
+        "libs/lib-021/src/index.ts"
+      ],
+      "@bench/lib-022": [
+        "libs/lib-022/src/index.ts"
+      ],
+      "@bench/lib-023": [
+        "libs/lib-023/src/index.ts"
+      ],
+      "@bench/lib-024": [
+        "libs/lib-024/src/index.ts"
+      ],
+      "@bench/lib-025": [
+        "libs/lib-025/src/index.ts"
+      ],
+      "@bench/lib-026": [
+        "libs/lib-026/src/index.ts"
+      ],
+      "@bench/lib-027": [
+        "libs/lib-027/src/index.ts"
+      ],
+      "@bench/lib-028": [
+        "libs/lib-028/src/index.ts"
+      ],
+      "@bench/lib-029": [
+        "libs/lib-029/src/index.ts"
+      ],
+      "@bench/lib-030": [
+        "libs/lib-030/src/index.ts"
+      ],
+      "@bench/lib-031": [
+        "libs/lib-031/src/index.ts"
+      ],
+      "@bench/lib-032": [
+        "libs/lib-032/src/index.ts"
+      ],
+      "@bench/lib-033": [
+        "libs/lib-033/src/index.ts"
+      ],
+      "@bench/lib-034": [
+        "libs/lib-034/src/index.ts"
+      ],
+      "@bench/lib-035": [
+        "libs/lib-035/src/index.ts"
+      ],
+      "@bench/lib-036": [
+        "libs/lib-036/src/index.ts"
+      ],
+      "@bench/lib-037": [
+        "libs/lib-037/src/index.ts"
+      ],
+      "@bench/lib-038": [
+        "libs/lib-038/src/index.ts"
+      ],
+      "@bench/lib-039": [
+        "libs/lib-039/src/index.ts"
+      ],
+      "@bench/lib-040": [
+        "libs/lib-040/src/index.ts"
+      ],
+      "@bench/lib-041": [
+        "libs/lib-041/src/index.ts"
+      ],
+      "@bench/lib-042": [
+        "libs/lib-042/src/index.ts"
+      ],
+      "@bench/lib-043": [
+        "libs/lib-043/src/index.ts"
+      ],
+      "@bench/lib-044": [
+        "libs/lib-044/src/index.ts"
+      ],
+      "@bench/lib-045": [
+        "libs/lib-045/src/index.ts"
+      ],
+      "@bench/lib-046": [
+        "libs/lib-046/src/index.ts"
+      ],
+      "@bench/lib-047": [
+        "libs/lib-047/src/index.ts"
+      ],
+      "@bench/lib-048": [
+        "libs/lib-048/src/index.ts"
+      ],
+      "@bench/lib-049": [
+        "libs/lib-049/src/index.ts"
+      ],
+      "@bench/lib-050": [
+        "libs/lib-050/src/index.ts"
+      ],
+      "@bench/lib-051": [
+        "libs/lib-051/src/index.ts"
+      ],
+      "@bench/lib-052": [
+        "libs/lib-052/src/index.ts"
+      ],
+      "@bench/lib-053": [
+        "libs/lib-053/src/index.ts"
+      ],
+      "@bench/lib-054": [
+        "libs/lib-054/src/index.ts"
+      ],
+      "@bench/lib-055": [
+        "libs/lib-055/src/index.ts"
+      ],
+      "@bench/lib-056": [
+        "libs/lib-056/src/index.ts"
+      ],
+      "@bench/lib-057": [
+        "libs/lib-057/src/index.ts"
+      ],
+      "@bench/lib-058": [
+        "libs/lib-058/src/index.ts"
+      ],
+      "@bench/lib-059": [
+        "libs/lib-059/src/index.ts"
+      ],
+      "@bench/lib-060": [
+        "libs/lib-060/src/index.ts"
+      ],
+      "@bench/lib-061": [
+        "libs/lib-061/src/index.ts"
+      ],
+      "@bench/lib-062": [
+        "libs/lib-062/src/index.ts"
+      ],
+      "@bench/lib-063": [
+        "libs/lib-063/src/index.ts"
+      ],
+      "@bench/lib-064": [
+        "libs/lib-064/src/index.ts"
+      ],
+      "@bench/lib-065": [
+        "libs/lib-065/src/index.ts"
+      ],
+      "@bench/lib-066": [
+        "libs/lib-066/src/index.ts"
+      ],
+      "@bench/lib-067": [
+        "libs/lib-067/src/index.ts"
+      ],
+      "@bench/lib-068": [
+        "libs/lib-068/src/index.ts"
+      ],
+      "@bench/lib-069": [
+        "libs/lib-069/src/index.ts"
+      ],
+      "@bench/lib-070": [
+        "libs/lib-070/src/index.ts"
+      ],
+      "@bench/lib-071": [
+        "libs/lib-071/src/index.ts"
+      ],
+      "@bench/lib-072": [
+        "libs/lib-072/src/index.ts"
+      ],
+      "@bench/lib-073": [
+        "libs/lib-073/src/index.ts"
+      ],
+      "@bench/lib-074": [
+        "libs/lib-074/src/index.ts"
+      ],
+      "@bench/lib-075": [
+        "libs/lib-075/src/index.ts"
+      ],
+      "@bench/lib-076": [
+        "libs/lib-076/src/index.ts"
+      ],
+      "@bench/lib-077": [
+        "libs/lib-077/src/index.ts"
+      ],
+      "@bench/lib-078": [
+        "libs/lib-078/src/index.ts"
+      ],
+      "@bench/lib-079": [
+        "libs/lib-079/src/index.ts"
+      ],
+      "@bench/lib-080": [
+        "libs/lib-080/src/index.ts"
+      ],
+      "@bench/lib-081": [
+        "libs/lib-081/src/index.ts"
+      ],
+      "@bench/lib-082": [
+        "libs/lib-082/src/index.ts"
+      ],
+      "@bench/lib-083": [
+        "libs/lib-083/src/index.ts"
+      ],
+      "@bench/lib-084": [
+        "libs/lib-084/src/index.ts"
+      ],
+      "@bench/lib-085": [
+        "libs/lib-085/src/index.ts"
+      ],
+      "@bench/lib-086": [
+        "libs/lib-086/src/index.ts"
+      ],
+      "@bench/lib-087": [
+        "libs/lib-087/src/index.ts"
+      ],
+      "@bench/lib-088": [
+        "libs/lib-088/src/index.ts"
+      ],
+      "@bench/lib-089": [
+        "libs/lib-089/src/index.ts"
+      ],
+      "@bench/lib-090": [
+        "libs/lib-090/src/index.ts"
+      ],
+      "@bench/lib-091": [
+        "libs/lib-091/src/index.ts"
+      ],
+      "@bench/lib-092": [
+        "libs/lib-092/src/index.ts"
+      ],
+      "@bench/lib-093": [
+        "libs/lib-093/src/index.ts"
+      ],
+      "@bench/lib-094": [
+        "libs/lib-094/src/index.ts"
+      ],
+      "@bench/lib-095": [
+        "libs/lib-095/src/index.ts"
+      ],
+      "@bench/lib-096": [
+        "libs/lib-096/src/index.ts"
+      ],
+      "@bench/lib-097": [
+        "libs/lib-097/src/index.ts"
+      ],
+      "@bench/lib-098": [
+        "libs/lib-098/src/index.ts"
+      ],
+      "@bench/lib-099": [
+        "libs/lib-099/src/index.ts"
+      ]
+    }
+  },
+  "angularCompilerOptions": {
+    "strictTemplates": true,
+    "strictInjectionParameters": true
+  }
+}

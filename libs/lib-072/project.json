@@ -1,0 +1,9 @@
+{
+  "name": "lib-072",
+  "projectType": "library",
+  "sourceRoot": "libs/lib-072/src",
+  "tags": [
+    "layer:7"
+  ],
+  "targets": {}
+}

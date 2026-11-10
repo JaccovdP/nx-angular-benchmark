@@ -1,0 +1,9 @@
+{
+  "name": "lib-046",
+  "projectType": "library",
+  "sourceRoot": "libs/lib-046/src",
+  "tags": [
+    "layer:4"
+  ],
+  "targets": {}
+}

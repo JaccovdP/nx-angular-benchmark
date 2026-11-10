@@ -1,0 +1,9 @@
+{
+  "name": "lib-062",
+  "projectType": "library",
+  "sourceRoot": "libs/lib-062/src",
+  "tags": [
+    "layer:6"
+  ],
+  "targets": {}
+}

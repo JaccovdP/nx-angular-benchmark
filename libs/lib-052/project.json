@@ -1,0 +1,9 @@
+{
+  "name": "lib-052",
+  "projectType": "library",
+  "sourceRoot": "libs/lib-052/src",
+  "tags": [
+    "layer:5"
+  ],
+  "targets": {}
+}
