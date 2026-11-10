@@ -2,7 +2,7 @@
 // Standalone: copy this file outside the repository; no npm dependencies required.
 import { spawn } from 'node:child_process';
 import { createWriteStream } from 'node:fs';
-import { access, mkdir, readFile, readdir, realpath, rm, lstat, writeFile } from 'node:fs/promises';
+import { access, copyFile, mkdir, readFile, readdir, realpath, rm, lstat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
@@ -13,6 +13,16 @@ import { parseArgs } from 'node:util';
 export function inside(parent, child) {
   const relative = path.relative(parent, child);
   return relative === '' || (!relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative));
+}
+
+export function validateTargetLock(manifest, lock) {
+  if (lock.lockfileVersion !== 3 || !lock.packages?.['']) throw new Error('Target lockfile must use npm lockfile version 3');
+  for (const section of ['dependencies', 'devDependencies']) {
+    const canonical = (value) => JSON.stringify(Object.entries(value ?? {}).sort(([a], [b]) => a.localeCompare(b)));
+    if (canonical(manifest[section]) !== canonical(lock.packages[''][section])) {
+      throw new Error(`Migration target lockfile does not match ${section}; regenerate it after changing version pins`);
+    }
+  }
 }
 
 export function options(args) {
@@ -307,9 +317,11 @@ export async function run(config) {
     }
     result.versions.baseline = JSON.parse(await readFile(path.join(clone, 'package.json'), 'utf8'));
     result.versions.baselineLockSha256 = createHash('sha256').update(await readFile(path.join(clone, 'package-lock.json'))).digest('hex');
+    await copyFile(path.join(clone, 'package-lock.json'), path.join(logDirectory, 'baseline-input-package-lock.json'));
     await step('install-baseline', [...npm, 'install', '--no-audit', '--no-fund']);
     result.versions.baselineInstalled = JSON.parse(await step('baseline-dependencies', [...npm, 'ls', '--depth=0', '--json'], clone, true));
     result.versions.baselineInstalledLockSha256 = createHash('sha256').update(await readFile(path.join(clone, 'package-lock.json'))).digest('hex');
+    await copyFile(path.join(clone, 'package-lock.json'), path.join(logDirectory, 'baseline-installed-package-lock.json'));
     const nx = [process.execPath, path.join(clone, 'node_modules', 'nx', 'bin', 'nx.js')];
     const build = [...nx, 'run-many', '--target=build', '--all', `--parallel=${config.parallel}`, '--skip-nx-cache', '--outputStyle=static'];
     await step('build-baseline', build);
@@ -354,11 +366,16 @@ export async function run(config) {
       }
     }
     await writeFile(migratedPath, `${JSON.stringify(migrated, null, 2)}\n`);
+    const targetLock = await readFile(path.join(clone, 'migration-package-lock.json'));
+    validateTargetLock(migrated, JSON.parse(targetLock));
+    result.versions.targetInputLockSha256 = createHash('sha256').update(targetLock).digest('hex');
+    await writeFile(path.join(clone, 'package-lock.json'), targetLock);
     await step('install-migrated', [...npm, 'install', '--no-audit', '--no-fund']);
     await step('run-migrations', [...nx, 'migrate', '--run-migrations=migrations.json']);
     result.versions.migrated = JSON.parse(await readFile(migratedPath, 'utf8'));
     result.versions.migratedInstalled = JSON.parse(await step('resolved-dependencies', [...npm, 'ls', '--depth=0', '--json'], clone, true));
     result.versions.migratedLockSha256 = createHash('sha256').update(await readFile(path.join(clone, 'package-lock.json'))).digest('hex');
+    await copyFile(path.join(clone, 'package-lock.json'), path.join(logDirectory, 'migrated-package-lock.json'));
     await rm(path.join(clone, 'dist'), { recursive: true, force: true });
     await rm(path.join(clone, '.angular'), { recursive: true, force: true });
     await rm(path.join(clone, '.nx'), { recursive: true, force: true });

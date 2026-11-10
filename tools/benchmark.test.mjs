@@ -4,7 +4,7 @@ import { mkdtemp, mkdir, writeFile, readFile, access, rm, symlink } from 'node:f
 import { execFileSync } from 'node:child_process';
 import os from 'node:os';
 import path from 'node:path';
-import { inside, options, removeOwnedClone, run, sampler, markdown } from './benchmark.mjs';
+import { inside, options, removeOwnedClone, run, sampler, markdown, validateTargetLock } from './benchmark.mjs';
 
 test('CLI validates concurrency, paths, refs and credential-free URLs', () => {
   for (const args of [
@@ -16,6 +16,17 @@ test('CLI validates concurrency, paths, refs and credential-free URLs', () => {
   assert.equal(options(['--repo', 'git@github.com:org/repo.git']).repo, 'git@github.com:org/repo.git');
   assert.equal(inside(path.resolve('a'), path.resolve('ab')), false);
   assert.equal(inside(path.resolve('a'), path.resolve('a', 'b')), true);
+});
+
+test('pinned target lock must exactly match all direct migration targets', () => {
+  const manifest = { dependencies: { a: '1.0.0', b: '2.0.0' }, devDependencies: { c: '3.0.0' } };
+  const lock = { lockfileVersion: 3, packages: { '': {
+    dependencies: { b: '2.0.0', a: '1.0.0' }, devDependencies: { c: '3.0.0' },
+  } } };
+  assert.doesNotThrow(() => validateTargetLock(manifest, lock));
+  assert.throws(() => validateTargetLock({ ...manifest, dependencies: { a: '1.0.1' } }, lock), /does not match dependencies/);
+  assert.throws(() => validateTargetLock({ ...manifest, devDependencies: { c: '^3.0.0' } }, lock), /does not match devDependencies/);
+  assert.throws(() => validateTargetLock(manifest, {}), /version 3/);
 });
 
 test('cleanup refuses missing or mismatched ownership and preserves files', async () => {

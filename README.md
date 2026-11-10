@@ -42,14 +42,14 @@ Prefer `--ref <full-commit-SHA>` for comparisons. `main`, tags and branch names 
 3. `npm install --no-audit --no-fund` on the checked-in baseline lockfile (**not** `npm ci`).
 4. Build all applications with `nx run-many --target=build --all --parallel=N --skip-nx-cache`.
 5. `nx migrate nx@22.3.0`, then explicitly plan `@angular/core@21.0.0` and `@angular/cli@21.0.0` from the original baseline versions with package target overrides. Merge/deduplicate and record all actual generated migration tasks; do not skip Angular migrations just because Nx's optional package updates did not schedule them.
-6. Normalize migrated manifest ranges to declared exact comparison pins, then run a second `npm install`.
+6. Normalize migrated manifest ranges to declared exact comparison pins, verify they match `migration-package-lock.json`, copy that checked-in target lock into place, then run a second `npm install`. This pins migrated transitive dependencies as well as direct targets.
 7. `nx migrate --run-migrations=migrations.json` and record resolved installed versions.
 8. Remove prior build/cache output and build all applications again under the upgraded toolchain.
 9. In `finally`, delete the verified runner-owned disposable checkout, **including** migration edits, untracked outputs, dependencies and caches.
 
 An ordinary step failure stops later workload steps but still runs cleanup and writes a failed report. Exit status is nonzero on any failure, including cleanup. Ctrl+C/SIGTERM requests process-tree termination and cleanup (with forceful termination after five seconds). Hard process kills, machine shutdowns and filesystem permission errors cannot guarantee cleanup; the report records failures when the process can still run. Never manually point the runner at a valuable existing checkout.
 
-The owner receipt remains in the otherwise empty work directory; use a **new work name** on the next run. Reports are Markdown plus sibling JSON and a `.logs` directory, all outside cleanup scope. The JSON contains generated migration tasks, exact declared/installed package versions, lockfile SHA-256 values, command arrays, exit codes and sampled measurements. Reports may contain local paths and machine details; review before sharing.
+The owner receipt remains in the otherwise empty work directory; use a **new work name** on the next run. Reports are Markdown plus sibling JSON and a `.logs` directory, all outside cleanup scope. The JSON contains generated migration tasks, exact declared/installed package versions, lockfile SHA-256 values, command arrays, exit codes and sampled measurements. Full input, installed-baseline and migrated lockfiles are preserved with the logs, including transitive resolved versions. Reports may contain local paths and machine details; review before sharing.
 
 ### Metrics and cache semantics
 
@@ -66,7 +66,7 @@ Peaks are sampled and can miss short spikes; brief commands may have only a fina
 
 Nx daemon, local task cache and remote caching are disabled. Angular persistent caching is explicitly disabled in `angular.json`; builds also run with `CI=true`. Prior build directories are removed before the migrated build. These are **cold task builds**, not cold machine runs. **OS page caches, npm's download cache, network/proxy caches and tool download caches are not cleared.** Installs on a warmed npm cache are not directly comparable with first-time downloads. The second install intentionally reuses baseline dependencies because upgrading an installed workspace is part of the workload.
 
-Keep commit/lockfile, runtime versions, parallelism, npm cache policy, power plan, thermal conditions and machine activity comparable. Use multiple runs and compare their distributions; the runner does not invent an aggregate score from unrelated metrics.
+Keep commit/lockfiles, runtime versions, parallelism, npm cache policy, power plan, thermal conditions and machine activity comparable. Both dependency states have checked-in lockfiles. The runner still uses the requested `npm install`, not `npm ci`; compare preserved input/installed lockfiles if npm adjusts platform-specific metadata. Use multiple runs and compare their distributions; the runner does not invent an aggregate score from unrelated metrics.
 
 ## Pinned baseline and migration target
 
@@ -96,6 +96,6 @@ npm.cmd run generate
 
 The equivalent Linux commands use `npm`. Generated projects and `package-lock.json` are checked in, so benchmark runs **do not generate** the workload before installation.
 
-`benchmark.config.json` defines app count, library count, rows per library and exact migration versions. `tools/generate.mjs` deterministically writes projects and TypeScript path aliases; `workload.json` records counts and graph edges. Re-running generation with unchanged configuration must produce no diff. Increasing **only** the library count preserves existing library files; changing application count deliberately redistributes chains. Generation does not delete old projects: grow in a new branch later, or explicitly remove obsolete generated projects when shrinking. No larger comparison branch is created here.
+`benchmark.config.json` defines app count, library count, rows per library and exact migration versions. If changing version pins, regenerate the corresponding `migration-package-lock.json` from an actual migrated installation; the runner refuses a manifest/lock mismatch. `tools/generate.mjs` deterministically writes projects and TypeScript path aliases; `workload.json` records counts and graph edges. Re-running generation with unchanged configuration must produce no diff. Increasing **only** the library count preserves existing library files; changing application count deliberately redistributes chains. Generation does not delete old projects: grow in a new branch later, or explicitly remove obsolete generated projects when shrinking. No larger comparison branch is created here.
 
 Tests use Node's built-in test runner: graph/count/reproducibility checks, CLI validation, ownership protection, metrics definitions and a real disposable Git clone with an intentionally failed npm install to verify report retention and cleanup.
