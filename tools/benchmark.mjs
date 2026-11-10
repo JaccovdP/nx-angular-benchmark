@@ -113,6 +113,7 @@ export async function sampler(interval) {
 }
 
 async function npmCommand() {
+  if (process.platform !== 'win32') return ['npm'];
   const candidates = [path.dirname(process.execPath), ...(process.env.PATH ?? '').split(path.delimiter)];
   for (const directory of candidates) {
     const cli = path.join(directory, 'node_modules', 'npm', 'bin', 'npm-cli.js');
@@ -120,7 +121,6 @@ async function npmCommand() {
       if (error.code !== 'ENOENT' && error.code !== 'ENOTDIR') throw error;
     }
   }
-  if (process.platform !== 'win32') return ['npm'];
   throw new Error('Cannot locate npm-cli.js beside Node or PATH entries. Install standard Node with npm.');
 }
 

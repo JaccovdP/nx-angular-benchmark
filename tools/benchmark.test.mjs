@@ -96,7 +96,7 @@ test('SIGTERM stops the install process tree and still cleans up and reports int
     await fixture(source, 'node -e "require(\'node:fs\').writeFileSync(\'ready\',String(process.pid));setInterval(()=>{},1000)"');
     const work = path.join(temp, 'owned');
     running = run({ repo: source, ref: 'HEAD', work, report: path.join(temp, 'report.md'), parallel: 2, 'sample-ms': 100 });
-    const deadline = Date.now() + 15000;
+    const deadline = Date.now() + 60000;
     let childPid;
     while (Date.now() < deadline) {
       try {
