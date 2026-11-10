@@ -242,6 +242,7 @@ export async function run(config) {
   const env = {
     ...process.env, CI: 'true', NX_DAEMON: 'false', NX_SKIP_NX_CACHE: 'true',
     NX_NO_CLOUD: 'true', NX_SKIP_REMOTE_CACHE: 'true', NX_INTERACTIVE: 'false',
+    NX_MIGRATE_USE_LOCAL: 'true',
     NG_CLI_ANALYTICS: 'false', NG_BUILD_CACHE: '0', GIT_TERMINAL_PROMPT: '0',
     npm_config_audit: 'false', npm_config_fund: 'false',
   };

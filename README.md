@@ -47,6 +47,8 @@ Prefer `--ref <full-commit-SHA>` for comparisons. `main`, tags and branch names 
 8. Remove prior build/cache output and build all applications again under the upgraded toolchain.
 9. In `finally`, delete the verified runner-owned disposable checkout, **including** migration edits, untracked outputs, dependencies and caches.
 
+Migration commands use `NX_MIGRATE_USE_LOCAL=true`: the installed, pinned Nx CLI performs planning/execution instead of downloading a floating `nx@latest` CLI into an unrelated temporary directory. Nx may perform its own dependency verification install within the measured `run-migrations` step.
+
 An ordinary step failure stops later workload steps but still runs cleanup and writes a failed report. Exit status is nonzero on any failure, including cleanup. Ctrl+C/SIGTERM requests process-tree termination and cleanup (with forceful termination after five seconds). Hard process kills, machine shutdowns and filesystem permission errors cannot guarantee cleanup; the report records failures when the process can still run. Never manually point the runner at a valuable existing checkout.
 
 The owner receipt remains in the otherwise empty work directory; use a **new work name** on the next run. Reports are Markdown plus sibling JSON and a `.logs` directory, all outside cleanup scope. The JSON contains generated migration tasks, exact declared/installed package versions, lockfile SHA-256 values, command arrays, exit codes and sampled measurements. Full input, installed-baseline and migrated lockfiles are preserved with the logs, including transitive resolved versions. Reports may contain local paths and machine details; review before sharing.
