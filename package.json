@@ -30,6 +30,7 @@
     "@nx/devkit": "21.3.2",
     "@nx/js": "21.3.2",
     "@nx/workspace": "21.3.2",
+    "@schematics/angular": "20.0.6",
     "@types/lodash-es": "4.17.12",
     "nx": "21.3.2",
     "typescript": "5.8.3"

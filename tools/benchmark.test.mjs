@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, readFile, access, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, readFile, access, rm, symlink } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import os from 'node:os';
 import path from 'node:path';
@@ -29,6 +29,12 @@ test('cleanup refuses missing or mismatched ownership and preserves files', asyn
     assert.equal(await readFile(path.join(temp, 'checkout', 'valuable.txt'), 'utf8'), 'preserve');
     await removeOwnedClone(temp, 'other');
     await assert.rejects(access(path.join(temp, 'checkout')));
+    const valuable = path.join(temp, 'valuable');
+    await mkdir(valuable);
+    await writeFile(path.join(valuable, 'keep.txt'), 'preserve');
+    await symlink(valuable, path.join(temp, 'checkout'), process.platform === 'win32' ? 'junction' : 'dir');
+    await assert.rejects(removeOwnedClone(temp, 'other'), /not an owned directory/);
+    assert.equal(await readFile(path.join(valuable, 'keep.txt'), 'utf8'), 'preserve');
   } finally { await rm(temp, { recursive: true, force: true }); }
 });
 
@@ -45,21 +51,25 @@ test('sampler exposes system RAM/CPU and reports unavailable disk honestly', asy
   }
 });
 
+async function fixture(source, preinstall) {
+  await mkdir(source);
+  await writeFile(path.join(source, 'package.json'), JSON.stringify({
+    name: 'intentional-install-fixture', version: '1.0.0', private: true,
+    scripts: { preinstall },
+  }));
+  await writeFile(path.join(source, 'package-lock.json'), '{"lockfileVersion":3,"packages":{}}');
+  await writeFile(path.join(source, 'workload.json'), '{"apps":10,"libraries":100}');
+  await writeFile(path.join(source, 'benchmark.config.json'), '{"migration":{"nx":"22.3.0"}}');
+  execFileSync('git', ['init', source], { stdio: 'ignore' });
+  execFileSync('git', ['-C', source, 'add', '.']);
+  execFileSync('git', ['-C', source, '-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-m', 'fixture'], { stdio: 'ignore' });
+}
+
 test('failed install retains logs/report, removes only owned checkout and returns failure', async () => {
   const temp = await mkdtemp(path.join(os.tmpdir(), 'nx-failure-test-'));
   try {
     const source = path.join(temp, 'source');
-    await mkdir(source);
-    await writeFile(path.join(source, 'package.json'), JSON.stringify({
-      name: 'intentional-install-failure', version: '1.0.0', private: true,
-      scripts: { preinstall: 'node -e "process.exit(17)"' },
-    }));
-    await writeFile(path.join(source, 'package-lock.json'), '{"lockfileVersion":3,"packages":{}}');
-    await writeFile(path.join(source, 'workload.json'), '{"apps":10,"libraries":100}');
-    await writeFile(path.join(source, 'benchmark.config.json'), '{"migration":{"nx":"22.3.0"}}');
-    execFileSync('git', ['init', source], { stdio: 'ignore' });
-    execFileSync('git', ['-C', source, 'add', '.']);
-    execFileSync('git', ['-C', source, '-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-m', 'fixture'], { stdio: 'ignore' });
+    await fixture(source, 'node -e "process.exit(17)"');
     const report = path.join(temp, 'report.md');
     const work = path.join(temp, 'owned');
     const result = await run({ repo: source, ref: 'HEAD', work, report, parallel: 2, 'sample-ms': 100 });
@@ -76,6 +86,38 @@ test('failed install retains logs/report, removes only owned checkout and return
     assert.equal(collision.status, 'failed');
     assert.equal(await readFile(report, 'utf8'), original);
   } finally { await rm(temp, { recursive: true, force: true }); }
+});
+
+test('SIGTERM stops the install process tree and still cleans up and reports interruption', async () => {
+  const temp = await mkdtemp(path.join(os.tmpdir(), 'nx-interrupt-test-'));
+  let running;
+  try {
+    const source = path.join(temp, 'source');
+    await fixture(source, 'node -e "require(\'node:fs\').writeFileSync(\'ready\',String(process.pid));setInterval(()=>{},1000)"');
+    const work = path.join(temp, 'owned');
+    running = run({ repo: source, ref: 'HEAD', work, report: path.join(temp, 'report.md'), parallel: 2, 'sample-ms': 100 });
+    const deadline = Date.now() + 15000;
+    let childPid;
+    while (Date.now() < deadline) {
+      try {
+        childPid = Number(await readFile(path.join(work, 'checkout', 'ready'), 'utf8'));
+        break;
+      } catch (error) { if (error.code !== 'ENOENT') throw error; }
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    process.emit('SIGTERM');
+    const result = await running;
+    running = undefined;
+    assert.ok(childPid, 'Install fixture must actually start before interruption');
+    assert.equal(result.status, 'interrupted');
+    assert.equal(result.steps.at(-1).exitCode, 0);
+    assert.throws(() => process.kill(childPid, 0), /ESRCH/);
+    await assert.rejects(access(path.join(work, 'checkout')));
+    assert.match(await readFile(path.join(temp, 'report.md'), 'utf8'), /\*\*interrupted\*\*/);
+  } finally {
+    if (running) { process.emit('SIGTERM'); await running; }
+    await rm(temp, { recursive: true, force: true });
+  }
 });
 
 test('markdown distinguishes absent measurements from zero', () => {

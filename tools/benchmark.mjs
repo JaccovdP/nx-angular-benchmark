@@ -145,7 +145,7 @@ const cell = (s) => String(s).replaceAll('|', '\\|').replaceAll('\n', ' ');
 export function markdown(result) {
   return `# Nx Angular benchmark
 
-Status: **${result.status}**
+Status: **${result.status}**; total elapsed: ${display(result.seconds)} seconds
 
 Started: ${result.started}
 
@@ -191,6 +191,7 @@ Cleanup deletes only this invocation's ownership-verified checkout, including de
 }
 
 export async function run(config) {
+  const runStart = performance.now();
   const token = randomUUID();
   const work = config.work;
   const clone = path.join(work, 'checkout');
@@ -231,7 +232,8 @@ export async function run(config) {
   const env = {
     ...process.env, CI: 'true', NX_DAEMON: 'false', NX_SKIP_NX_CACHE: 'true',
     NX_NO_CLOUD: 'true', NX_SKIP_REMOTE_CACHE: 'true', NX_INTERACTIVE: 'false',
-    NG_CLI_ANALYTICS: 'false', NG_BUILD_CACHE: '0',
+    NG_CLI_ANALYTICS: 'false', NG_BUILD_CACHE: '0', GIT_TERMINAL_PROMPT: '0',
+    npm_config_audit: 'false', npm_config_fund: 'false',
   };
   async function step(name, command, cwd = clone, capture = false) {
     if (interrupted && name !== 'cleanup') throw new Error('Benchmark interrupted');
@@ -307,18 +309,38 @@ export async function run(config) {
     result.versions.baselineLockSha256 = createHash('sha256').update(await readFile(path.join(clone, 'package-lock.json'))).digest('hex');
     await step('install-baseline', [...npm, 'install', '--no-audit', '--no-fund']);
     result.versions.baselineInstalled = JSON.parse(await step('baseline-dependencies', [...npm, 'ls', '--depth=0', '--json'], clone, true));
+    result.versions.baselineInstalledLockSha256 = createHash('sha256').update(await readFile(path.join(clone, 'package-lock.json'))).digest('hex');
     const nx = [process.execPath, path.join(clone, 'node_modules', 'nx', 'bin', 'nx.js')];
     const build = [...nx, 'run-many', '--target=build', '--all', `--parallel=${config.parallel}`, '--skip-nx-cache', '--outputStyle=static'];
     await step('build-baseline', build);
     const target = settings.migration;
     const overrides = Object.fromEntries(Object.keys({
       ...result.versions.baseline.dependencies, ...result.versions.baseline.devDependencies,
-    }).filter((name) => name.startsWith('@angular/') || name.startsWith('@angular-devkit/')).map((name) => [name, target.angular]));
+    }).filter((name) => name.startsWith('@angular/') || name.startsWith('@angular-devkit/') || name === '@schematics/angular').map((name) => [name, target.angular]));
     Object.assign(overrides, { typescript: target.typescript, 'date-fns': target['date-fns'], rxjs: target.rxjs });
     await step('plan-migration', [...nx, 'migrate', `nx@${target.nx}`,
       `--to=${Object.entries(overrides).map(([name, version]) => `${name}@${version}`).join(',')}`]);
     const migrationFile = path.join(clone, 'migrations.json');
-    result.migration.generated = JSON.parse(await readFile(migrationFile, 'utf8'));
+    const planned = JSON.parse(await readFile(migrationFile, 'utf8')).migrations;
+    const from = Object.entries({
+      ...result.versions.baseline.dependencies, ...result.versions.baseline.devDependencies,
+    }).map(([name, version]) => `${name}@${version}`).join(',');
+    // Nx's own package updates need not schedule Angular's optional major upgrades.
+    // Explicitly collect core AND CLI migrations using the original baseline versions.
+    for (const name of ['@angular/core', '@angular/cli']) {
+      await rm(migrationFile, { force: true });
+      await step(`plan-${name.slice(9)}-migration`, [...nx, 'migrate', `${name}@${target.angular}`,
+        `--from=${from}`, `--to=${Object.entries(overrides).map(([pkg, version]) => `${pkg}@${version}`).join(',')}`]);
+      try {
+        planned.push(...JSON.parse(await readFile(migrationFile, 'utf8')).migrations);
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error;
+        throw new Error(`No migrations generated for ${name}; refusing an unverified major upgrade`);
+      }
+    }
+    const unique = [...new Map(planned.map((migration) => [`${migration.package}:${migration.name}`, migration])).values()];
+    result.migration.generated = { migrations: unique };
+    await writeFile(migrationFile, `${JSON.stringify(result.migration.generated, null, 2)}\n`);
     if (!Array.isArray(result.migration.generated.migrations) || !result.migration.generated.migrations.length) {
       throw new Error('Expected actual generated migration tasks; none found');
     }
@@ -366,6 +388,7 @@ export async function run(config) {
     }
     process.off('SIGINT', interrupt);
     process.off('SIGTERM', interrupt);
+    result.seconds = (performance.now() - runStart) / 1000;
     // Only write if this invocation reserved the report, never overwrite a collision.
     if (reportReserved) {
       await writeFile(config.report, markdown(result));

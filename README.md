@@ -41,7 +41,7 @@ Prefer `--ref <full-commit-SHA>` for comparisons. `main`, tags and branch names 
 2. `git clone --no-checkout`, then detached checkout and commit resolution.
 3. `npm install --no-audit --no-fund` on the checked-in baseline lockfile (**not** `npm ci`).
 4. Build all applications with `nx run-many --target=build --all --parallel=N --skip-nx-cache`.
-5. `nx migrate nx@22.3.0` with explicit package target overrides; retain and record the actual generated migration tasks.
+5. `nx migrate nx@22.3.0`, then explicitly plan `@angular/core@21.0.0` and `@angular/cli@21.0.0` from the original baseline versions with package target overrides. Merge/deduplicate and record all actual generated migration tasks; do not skip Angular migrations just because Nx's optional package updates did not schedule them.
 6. Normalize migrated manifest ranges to declared exact comparison pins, then run a second `npm install`.
 7. `nx migrate --run-migrations=migrations.json` and record resolved installed versions.
 8. Remove prior build/cache output and build all applications again under the upgraded toolchain.
