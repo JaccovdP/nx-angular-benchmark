@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "apps": 10,
   "libraries": 100,
+  "libraryLanes": 10,
   "rowsPerLibrary": 64,
   "graph": {
     "lib-000": [],

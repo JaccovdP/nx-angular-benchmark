@@ -41,7 +41,7 @@ test('growth preserves existing libraries and does not silently remove old proje
   const bigger = workload({ ...config, libraries: 120, apps: 12 });
   assert.equal(Object.keys(bigger.paths).length, 120);
   assert.equal(JSON.parse(bigger.files.get('workload.json')).apps, 12);
-  assert.throws(() => workload({ ...config, libraries: 9 }), /at least apps/);
+  assert.throws(() => workload({ ...config, libraries: 9 }), /at least libraryLanes/);
   for (const value of [0, -1, 1.5, '10', NaN]) {
     assert.throws(() => workload({ ...config, apps: value }), /integer/);
   }
@@ -49,5 +49,9 @@ test('growth preserves existing libraries and does not silently remove old proje
   const moreLibraries = workload({ ...config, libraries: 110 });
   for (const [file, contents] of smaller.files) {
     if (file.startsWith('libs/')) assert.equal(moreLibraries.files.get(file), contents);
+  }
+  const moreApps = workload({ ...config, apps: 20, libraryLanes: 10 });
+  for (const [file, contents] of smaller.files) {
+    if (file.startsWith('libs/') || file.startsWith('apps/')) assert.equal(moreApps.files.get(file), contents);
   }
 });

@@ -8,25 +8,26 @@ const id = (n) => String(n).padStart(3, '0');
 
 export function workload(config) {
   const { apps, libraries, rowsPerLibrary } = config;
-  for (const [name, value] of Object.entries({ apps, libraries, rowsPerLibrary })) {
+  const libraryLanes = config.libraryLanes ?? Math.min(apps, 10);
+  for (const [name, value] of Object.entries({ apps, libraries, rowsPerLibrary, libraryLanes })) {
     if (!Number.isSafeInteger(value) || value < 1 || value > 10000) {
       throw new Error(`${name} must be an integer between 1 and 10000`);
     }
   }
-  if (libraries < apps) throw new Error('libraries must be at least apps');
+  if (libraries < libraryLanes || apps < libraryLanes) throw new Error('apps and libraries must be at least libraryLanes');
   const files = new Map();
   const paths = {};
   const graph = {};
   for (let n = 0; n < libraries; n++) {
     const name = `lib-${id(n)}`;
-    const previous = n < apps ? null : `lib-${id(n - apps)}`;
-    const shared = n >= apps && n % apps !== 0 ? 'lib-000' : null;
+    const previous = n < libraryLanes ? null : `lib-${id(n - libraryLanes)}`;
+    const shared = n >= libraryLanes && n % libraryLanes !== 0 ? 'lib-000' : null;
     const deps = [...new Set([previous, shared].filter(Boolean))];
     graph[name] = deps;
     paths[`@bench/${name}`] = [`libs/${name}/src/index.ts`];
     files.set(`libs/${name}/project.json`, json({
       name, projectType: 'library', sourceRoot: `libs/${name}/src`,
-      tags: [`layer:${Math.floor(n / apps)}`], targets: {},
+      tags: [`layer:${Math.floor(n / libraryLanes)}`], targets: {},
     }));
     files.set(`libs/${name}/tsconfig.json`, json({
       extends: '../../tsconfig.base.json',
@@ -70,7 +71,8 @@ export class Lib${id(n)}Component {
   }
   for (let n = 0; n < apps; n++) {
     const name = `app-${id(n)}`;
-    const top = n + Math.floor((libraries - 1 - n) / apps) * apps;
+    const lane = n % libraryLanes;
+    const top = lane + Math.floor((libraries - 1 - lane) / libraryLanes) * libraryLanes;
     const lib = `lib-${id(top)}`;
     graph[name] = [lib];
     files.set(`apps/${name}/project.json`, json({
@@ -110,7 +112,7 @@ class AppComponent { readonly summary$ = summary$; }
 bootstrapApplication(AppComponent).catch((error: unknown) => { console.error(error); });
 `);
   }
-  files.set('workload.json', json({ schemaVersion: 1, apps, libraries, rowsPerLibrary, graph }));
+  files.set('workload.json', json({ schemaVersion: 1, apps, libraries, libraryLanes, rowsPerLibrary, graph }));
   return { files, paths };
 }
 

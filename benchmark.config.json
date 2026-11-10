@@ -1,6 +1,7 @@
 {
   "apps": 10,
   "libraries": 100,
+  "libraryLanes": 10,
   "rowsPerLibrary": 64,
   "migration": {
     "nx": "22.3.0",
